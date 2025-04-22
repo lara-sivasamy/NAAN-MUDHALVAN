@@ -1,0 +1,135 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "provenance": [],
+      "authorship_tag": "ABX9TyPuUlcZujPdqo0xEKbfRuwE",
+      "include_colab_link": true
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "view-in-github",
+        "colab_type": "text"
+      },
+      "source": [
+        "<a href=\"https://colab.research.google.com/github/lara-sivasamy/NAAN-MUDHALVAN/blob/main/Wikipedia\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "ZDYNJvbgvMSx",
+        "outputId": "55afff12-dc33-4e8b-9116-64f66f447d59"
+      },
+      "outputs": [
+        {
+          "name": "stdout",
+          "output_type": "stream",
+          "text": [
+            "  Preparing metadata (setup.py) ... \u001b[?25l\u001b[?25hdone\n",
+            "\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m2.5/2.5 MB\u001b[0m \u001b[31m20.5 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
+            "\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m44.4/44.4 kB\u001b[0m \u001b[31m2.0 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
+            "\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m50.9/50.9 kB\u001b[0m \u001b[31m1.3 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
+            "\u001b[?25h  Building wheel for wikipedia (setup.py) ... \u001b[?25l\u001b[?25hdone\n",
+            "\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m42.0/42.0 kB\u001b[0m \u001b[31m3.0 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
+            "\u001b[?25hWikipediaBot is ready! Type 'exit' to quit.\n",
+            "\n",
+            "You: suriya birthday date?\n"
+          ]
+        },
+        {
+          "output_type": "stream",
+          "name": "stderr",
+          "text": [
+            "<ipython-input-1-60f52455ea4b>:34: LangChainDeprecationWarning: The method `BaseRetriever.get_relevant_documents` was deprecated in langchain-core 0.1.46 and will be removed in 1.0. Use :meth:`~invoke` instead.\n",
+            "  wiki_docs = wiki.get_relevant_documents(query)\n"
+          ]
+        },
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "\n",
+            "WikipediaBot: Suriya's birthday is July 23, 1975. \n",
+            "\n"
+          ]
+        }
+      ],
+      "source": [
+        "\n",
+        "# STEP 1: Install Required Packages with Version Compatibility\n",
+        "!pip install -q langchain langchain-community wikipedia\n",
+        "!pip install -q google-generativeai langchain-google-genai\n",
+        "\n",
+        "# STEP 2: Import Libraries\n",
+        "import os\n",
+        "from langchain_community.chat_models import ChatOpenAI\n",
+        "from langchain_google_genai import ChatGoogleGenerativeAI\n",
+        "from langchain_community.utilities import WikipediaAPIWrapper\n",
+        "from langchain_community.retrievers import WikipediaRetriever\n",
+        "from langchain.schema import SystemMessage, HumanMessage\n",
+        "\n",
+        "# STEP 3: Set your Google API Key (replace with your actual key)\n",
+        "os.environ[\"GOOGLE_API_KEY\"] = \"AIzaSyA7I7bnBtcrwjGfMUXkHuHpKPcr99U906A\"\n",
+        "\n",
+        "# STEP 4: Initialize Gemini (Google Generative AI)\n",
+        "def get_llm():\n",
+        "    return ChatGoogleGenerativeAI(\n",
+        "        model=\"gemini-1.5-pro-latest\",  # Changed to \"gemini-pro\" as \"gemini-1.5-pro-latest\" might not be available\n",
+        "        google_api_key=os.getenv(\"GOOGLE_API_KEY\")\n",
+        "    )\n",
+        "\n",
+        "llm = get_llm()\n",
+        "\n",
+        "# STEP 5: Set up Wikipedia Retriever\n",
+        "wiki = WikipediaRetriever(\n",
+        "    top_k_results=2,  # Set directly as parameter\n",
+        "    lang=\"en\"\n",
+        ")\n",
+        "\n",
+        "# STEP 6: Chatbot Function\n",
+        "def wiki_chatbot(query):\n",
+        "    # Get Wikipedia content\n",
+        "    wiki_docs = wiki.get_relevant_documents(query)\n",
+        "    context = \"\\n\\n\".join([doc.page_content for doc in wiki_docs])\n",
+        "\n",
+        "    # Prompt messages\n",
+        "    messages = [\n",
+        "        SystemMessage(content=\"You are a helpful assistant who uses Wikipedia content to answer questions.\"),\n",
+        "        HumanMessage(content=f\"Here is some Wikipedia info:\\n\\n{context}\\n\\nNow answer this question: {query}\")\n",
+        "    ]\n",
+        "\n",
+        "    # Get LLM response\n",
+        "    response = llm.invoke(messages)\n",
+        "    return response.content\n",
+        "\n",
+        "# STEP 7: Chat Loop\n",
+        "print(\"WikipediaBot is ready! Type 'exit' to quit.\\n\")\n",
+        "while True:\n",
+        "    user_input = input(\"You: \")\n",
+        "    if user_input.lower() in [\"exit\", \"quit\"]:\n",
+        "        break\n",
+        "    try:\n",
+        "        answer = wiki_chatbot(user_input)\n",
+        "        print(\"\\nWikipediaBot:\", answer, \"\\n\")\n",
+        "    except Exception as e:\n",
+        "        print(\"Error:\", e)"
+      ]
+    }
+  ]
+}
