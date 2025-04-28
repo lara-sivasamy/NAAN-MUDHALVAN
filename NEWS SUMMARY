@@ -1,0 +1,123 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "provenance": [],
+      "authorship_tag": "ABX9TyO00ESiQOQt3KLkyZhIfsYK",
+      "include_colab_link": true
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "view-in-github",
+        "colab_type": "text"
+      },
+      "source": [
+        "<a href=\"https://colab.research.google.com/github/lara-sivasamy/NAAN-MUDHALVAN/blob/main/NEWS%20SUMMARY\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "gPGliB07ZJkF",
+        "outputId": "2ba61377-199a-47e2-80b4-ce96c098c159"
+      },
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "\u001b[?25l   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m0.0/42.0 kB\u001b[0m \u001b[31m?\u001b[0m eta \u001b[36m-:--:--\u001b[0m\r\u001b[2K   \u001b[91m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[90m╺\u001b[0m \u001b[32m41.0/42.0 kB\u001b[0m \u001b[31m26.0 MB/s\u001b[0m eta \u001b[36m0:00:01\u001b[0m\r\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m42.0/42.0 kB\u001b[0m \u001b[31m844.6 kB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
+            "\u001b[?25h"
+          ]
+        },
+        {
+          "output_type": "stream",
+          "name": "stderr",
+          "text": [
+            "<ipython-input-1-5f46cdb3d12f>:25: LangChainDeprecationWarning: Please see the migration guide at: https://python.langchain.com/docs/versions/migrating_memory/\n",
+            "  memory = ConversationBufferMemory(memory_key=\"chat_history\", return_messages=True)\n",
+            "<ipython-input-1-5f46cdb3d12f>:34: LangChainDeprecationWarning: The class `LLMChain` was deprecated in LangChain 0.1.17 and will be removed in 1.0. Use :meth:`~RunnableSequence, e.g., `prompt | llm`` instead.\n",
+            "  chain = LLMChain(\n"
+          ]
+        },
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "📰 Enter news text to summarize (or type 'exit' to quit): India signs $7.4 billion deal to buy 26 Rafale fighter jets\n",
+            "🧠 Summary: India has finalized a deal with France to purchase 26 Rafale fighter jets, along with three Scorpene class submarines, for a total of $7.4 billion.  This bolsters India's air and naval defense capabilities.\n",
+            "\n"
+          ]
+        }
+      ],
+      "source": [
+        "# Install necessary libraries\n",
+        "!pip install -q langchain langchain-google-genai google-generativeai\n",
+        "\n",
+        "# Import libraries\n",
+        "import os\n",
+        "import google.generativeai as genai\n",
+        "from langchain.prompts import PromptTemplate\n",
+        "from langchain_google_genai import ChatGoogleGenerativeAI\n",
+        "from langchain.chains import LLMChain\n",
+        "from langchain.memory import ConversationBufferMemory\n",
+        "\n",
+        "# Set your Gemini API Key here\n",
+        "os.environ[\"GOOGLE_API_KEY\"] = \"AIzaSyA7I7bnBtcrwjGfMUXkHuHpKPcr99U906A\"\n",
+        "\n",
+        "# Configure Gemini\n",
+        "genai.configure(api_key=os.environ[\"GOOGLE_API_KEY\"])\n",
+        "\n",
+        "# Create the Chat Model\n",
+        "llm = ChatGoogleGenerativeAI(\n",
+        "    model=\"models/gemini-1.5-pro-latest\",  # ✅ Correct model name!\n",
+        "    temperature=0.7\n",
+        ")\n",
+        "\n",
+        "# Create memory for conversation\n",
+        "memory = ConversationBufferMemory(memory_key=\"chat_history\", return_messages=True)\n",
+        "\n",
+        "# Create a Prompt Template\n",
+        "prompt = PromptTemplate(\n",
+        "    input_variables=[\"news\"],\n",
+        "    template=\"Summarize the following news article:\\n{news}\"\n",
+        ")\n",
+        "\n",
+        "# Build the chain\n",
+        "chain = LLMChain(\n",
+        "    llm=llm,\n",
+        "    prompt=prompt,\n",
+        "    memory=memory\n",
+        ")\n",
+        "\n",
+        "# Function to chat with chatbot\n",
+        "def chat_with_bot():\n",
+        "    while True:\n",
+        "        news_input = input(\"📰 Enter news text to summarize (or type 'exit' to quit): \")\n",
+        "        if news_input.lower() == 'exit':\n",
+        "            print(\"👋 Goodbye!\")\n",
+        "            break\n",
+        "        response = chain.invoke({\"news\": news_input})\n",
+        "        print(f\"🧠 Summary: {response['text']}\\n\")\n",
+        "\n",
+        "# Start chatting!\n",
+        "chat_with_bot()"
+      ]
+    }
+  ]
+}
